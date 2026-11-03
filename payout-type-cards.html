@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Three ways to get paid</title>
+<meta name="description" content="Request for Payment, ACH Debit, and Debit and Credit Cards.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --dot: #8840f8;
+
+    /* Scroll distance the animation plays over */
+    --run: 220vh;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; background: #0a0710; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    color: #fff;
+    background: #0a0710;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ---------- Scroll track + pinned stage ---------- */
+  .track { position: relative; height: calc(100vh + var(--run)); }
+  .stage {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100svh;
+    overflow: hidden;
+    background:
+      radial-gradient(90% 110% at 0% 0%, #1b0a48 0%, rgba(27,10,72,0) 62%),
+      linear-gradient(100deg, #130833 0%, #0e0726 38%, #0a0710 72%);
+  }
+
+  /* ---------- Soft drifting glows ---------- */
+  .glows { position: absolute; inset: 0; pointer-events: none; }
+  .glow { position: absolute; border-radius: 50%; will-change: transform; }
+  .glow > i {
+    display: block; width: 100%; height: 100%; border-radius: 50%;
+    animation: drift 16s ease-in-out infinite alternate;
+  }
+  .glow.g1 { width: 50vw; height: 50vw; left: -14vw; top: -18vw; }
+  .glow.g1 > i { background: radial-gradient(circle, rgba(124,76,255,.20) 0%, rgba(124,76,255,0) 66%); }
+  .glow.g2 { width: 44vw; height: 44vw; left: 36vw; bottom: -26vw; }
+  .glow.g2 > i { background: radial-gradient(circle, rgba(150,110,255,.14) 0%, rgba(150,110,255,0) 66%); animation-duration: 21s; animation-delay: -8s; }
+  @keyframes drift {
+    from { transform: translate3d(-3vw, -2vw, 0) scale(1); }
+    to   { transform: translate3d(3vw, 2.5vw, 0) scale(1.12); }
+  }
+
+  /* ---------- Layout ---------- */
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 7vw;
+  }
+  .slide__inner {
+    width: calc(100% / var(--fit, 1));
+    max-width: 1240px;
+    margin: 0 auto;
+    transform: scale(var(--fit, 1));
+    transform-origin: left center;
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(18px, 2.1vw, 30px);
+  }
+  .cell { display: flex; }
+
+  /* ---------- Glass card ---------- */
+  .card {
+    position: relative;
+    flex: 1;
+    min-height: 463px;
+    padding: 36px 25px 30px;
+    border-radius: 34px;
+    background:
+      radial-gradient(120% 55% at 18% 0%, rgba(165,135,255,.13) 0%, rgba(165,135,255,0) 60%),
+      linear-gradient(165deg, var(--c1) 0%, var(--c2) 100%);
+    box-shadow: 0 44px 80px -34px rgba(0,0,0,.7);
+    transform-origin: 50% 100%;
+    will-change: transform, opacity, filter;
+  }
+  .card--1 { --c1: #271e3f; --c2: #1a1230; }
+  .card--2 { --c1: #262033; --c2: #171222; }
+  .card--3 { --c1: #26232b; --c2: #15111c; }
+
+  /* hairline border, brighter on the top-left like the design */
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(160deg, rgba(225,212,255,.55) 0%, rgba(170,150,215,.2) 38%, rgba(120,105,170,.3) 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    pointer-events: none;
+  }
+
+  [data-part] { will-change: transform, opacity; }
+
+  /* ---------- Icon slot ---------- */
+  .icon {
+    height: var(--ih, 56px);
+    margin-bottom: 34px;
+    display: flex;
+    align-items: flex-start;
+  }
+  .icon img { display: block; height: 100%; width: auto; }
+  /* shown only if the icon file is missing */
+  .icon.is-empty::after {
+    content: "";
+    width: calc(var(--ih, 56px) * 1.25);
+    height: 100%;
+    border-radius: 14px;
+    border: 1px dashed rgba(200,185,255,.4);
+    background: rgba(160,135,255,.08);
+  }
+
+  /* ---------- Card text ---------- */
+  .card h3 {
+    margin: 0;
+    font-size: clamp(22px, 2.1vw, 30px);
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -0.035em;
+  }
+  .card .desc {
+    margin: 12px 0 0;
+    font-size: clamp(12.5px, 0.98vw, 14px);
+    line-height: 1.38;
+    color: rgba(255,255,255,.92);
+  }
+  .divider {
+    height: 1px;
+    margin: 28px 0 26px;
+    background: linear-gradient(90deg, rgba(255,255,255,.12), rgba(255,255,255,.62) 50%, rgba(255,255,255,.12));
+    transform-origin: 50% 50%;
+  }
+  .card ul { list-style: none; margin: 0; padding: 0; }
+  .card li {
+    position: relative;
+    padding-left: 16px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    line-height: 1.35;
+    color: #f1ecff;
+  }
+  .card li:last-child { margin-bottom: 0; }
+  .card li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 5px;
+    height: 5px;
+    margin-top: -2.5px;
+    border-radius: 50%;
+    background: var(--dot);
+  }
+
+
+  /* ---------- Small screens: normal scrolling, cards rise as they arrive ---------- */
+  .flow .track { height: auto; }
+  .flow .stage { position: relative; height: auto; overflow: hidden; }
+  .flow .slide { position: relative; inset: auto; padding: 56px 20px 64px; }
+  .flow .slide__inner { width: 100%; transform: none; }
+  .flow .cards { grid-template-columns: 1fr; gap: 20px; }
+  .flow .card { min-height: 0; padding: 30px 22px 26px; border-radius: 28px; }
+  .flow .glow.g1 { width: 120vw; height: 120vw; }
+</style>
+<noscript><style>.track{height:auto}.stage{position:relative;height:auto}.slide{position:relative;inset:auto;padding:56px 7vw}</style></noscript>
+</head>
+
+<body>
+<main class="track" id="track">
+  <div class="stage" id="stage">
+
+    <div class="glows" aria-hidden="true">
+      <div class="glow g1" data-depth="1"><i></i></div>
+      <div class="glow g2" data-depth="-1.2"><i></i></div>
+    </div>
+
+    <section class="slide" aria-label="Three ways to get paid">
+      <div class="slide__inner">
+        <div class="cards" id="cards">
+
+          <!-- ============ CARD 1 ============ -->
+          <div class="cell">
+            <article class="card card--1">
+              <!-- ICONS: embedded as PNG data. To swap one, replace the src of its <img> (a file path or a new data URI). -->
+              <div class="icon" style="--ih:72px" data-part>
+                <img src="data:image/png;base64,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" alt="" onerror="this.parentNode.classList.add('is-empty');this.remove()">
+              </div>
+              <h3 data-part>Request for Payment</h3>
+              <p class="desc" data-part>Your customer approves a request in their own banking app.</p>
+              <div class="divider" data-part data-scale></div>
+              <ul data-part>
+                <li>The payment arrives in seconds, final.</li>
+                <li>Every request carries the amount, due date and expiry, plus a reference for automatic reconciliation.</li>
+                <li>Your customer stays in control: pay now, schedule or decline.</li>
+                <li>Available 24/7, where the customer’s bank supports Request for Payment.</li>
+              </ul>
+            </article>
+          </div>
+
+          <!-- ============ CARD 2 ============ -->
+          <div class="cell">
+            <article class="card card--2">
+              <div class="icon" style="--ih:43px" data-part>
+                <img src="data:image/png;base64,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" alt="" onerror="this.parentNode.classList.add('is-empty');this.remove()">
+              </div>
+              <h3 data-part>ACH Debit</h3>
+              <p class="desc" data-part>Your customer authorizes a debit from their bank or credit union account.</p>
+              <div class="divider" data-part data-scale></div>
+              <ul data-part>
+                <li>Online consumer debits are validated before the first debit.</li>
+                <li>Same Day ACH settles the same business day. Standard ACH settles the next.</li>
+                <li>Reaches all U.S. bank and credit union accounts.</li>
+              </ul>
+            </article>
+          </div>
+
+          <!-- ============ CARD 3 ============ -->
+          <div class="cell">
+            <article class="card card--3">
+              <div class="icon" style="--ih:54px" data-part>
+                <img src="data:image/png;base64,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" alt="" onerror="this.parentNode.classList.add('is-empty');this.remove()">
+              </div>
+              <h3 data-part>Debit and Credit Cards</h3>
+              <p class="desc" data-part>Your customer pays with a debit or credit card.</p>
+              <div class="divider" data-part data-scale></div>
+              <ul data-part>
+                <li>Approved in seconds.</li>
+                <li>Debit: paid from the customer’s linked bank account. Credit: paid on their credit line.</li>
+                <li>Payments settle to your account, typically the next business day.</li>
+                <li>Card payments can be disputed by the cardholder under card network rules.</li>
+              </ul>
+            </article>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============================================================
+     TWEAK THESE
+     ============================================================ */
+  var CONFIG = {
+    smoothing: 0.04,   // 0 to 1. Lower = floatier, more lag. Higher = snappier.
+    rise: 120,         // px each card rises from.
+    partRise: 26,      // px the text inside each card rises from.
+    blur: 5,           // px of blur while moving (0 = crisp).
+    cardGap: 0.2,      // How far apart the cards start (share of the full scroll).
+    cardWidth: 0.38,   // How long each card takes to arrive (share of the full scroll).
+    flowBreakpoint: 900 // Below this width the page scrolls normally.
+  };
+
+  var root   = document.documentElement;
+  var track  = document.getElementById("track");
+  var inner  = document.querySelector(".slide__inner");
+  var glows  = Array.prototype.slice.call(document.querySelectorAll(".glow"));
+  var cells  = Array.prototype.slice.call(document.querySelectorAll(".cell"));
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var cards = cells.map(function (cell) {
+    return {
+      cell: cell,
+      card: cell.querySelector(".card"),
+      parts: Array.prototype.slice.call(cell.querySelectorAll("[data-part]"))
+    };
+  });
+
+  var flow = false;
+
+  function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
+  function easeOut(t) { return 1 - Math.pow(1 - t, 4); }
+
+  /* ---------- fit the cards inside short viewports (pinned mode only) ---------- */
+  function fit() {
+    inner.style.setProperty("--fit", 1);
+    if (flow) return;
+    var avail = window.innerHeight - 56;
+    var h = inner.offsetHeight;
+    var k = h > avail ? Math.max(0.5, avail / h) : 1;
+    inner.style.setProperty("--fit", k.toFixed(4));
+  }
+
+  function setMode() {
+    flow = window.innerWidth <= CONFIG.flowBreakpoint;
+    root.classList.toggle("flow", flow);
+    fit();
+  }
+
+  /* ---------- paint one card at master time T (0 = hidden, 1 = arrived) ---------- */
+  function paintCard(c, T) {
+    var a = easeOut(clamp(T, 0, 1));
+    var el = c.card;
+    el.style.opacity = a.toFixed(3);
+    if (!reduce) {
+      el.style.transform = "translate3d(0," + ((1 - a) * CONFIG.rise).toFixed(2) + "px,0) scale(" + (0.96 + a * 0.04).toFixed(4) + ")";
+      var b = (1 - a) * CONFIG.blur;
+      el.style.filter = b > 0.05 ? "blur(" + b.toFixed(2) + "px)" : "none";
+    }
+    // the contents settle in just after the card, one after another
+    c.parts.forEach(function (part, k) {
+      var t = easeOut(clamp((T - 0.16 - k * 0.08) / 0.84, 0, 1));
+      part.style.opacity = t.toFixed(3);
+      if (reduce) return;
+      if (part.hasAttribute("data-scale")) {
+        part.style.transform = "scaleX(" + t.toFixed(3) + ")";
+      } else {
+        part.style.transform = "translate3d(0," + ((1 - t) * CONFIG.partRise).toFixed(2) + "px,0)";
+      }
+    });
+  }
+
+  /* ---------- scroll position -> paint ---------- */
+  function paint(y) {
+    var vh = window.innerHeight;
+
+    if (flow) {
+      cards.forEach(function (c) {
+        var docTop = c.cell.getBoundingClientRect().top + window.scrollY;
+        var top = docTop - y;
+        paintCard(c, (vh * 0.97 - top) / (vh * 0.34));
+      });
+      return;
+    }
+
+    var trackTop = track.getBoundingClientRect().top + window.scrollY;
+    var range = track.offsetHeight - vh;
+    var p = range > 0 ? clamp((y - trackTop) / range, 0, 1) : 1;
+
+    cards.forEach(function (c, i) {
+      var start = 0.03 + i * CONFIG.cardGap;
+      paintCard(c, (p - start) / CONFIG.cardWidth);
+    });
+
+    if (!reduce) {
+      glows.forEach(function (g) {
+        var depth = parseFloat(g.getAttribute("data-depth")) || 0;
+        g.style.transform = "translate3d(" + (p * depth * 6).toFixed(2) + "vw," + (p * depth * -10).toFixed(2) + "vh,0)";
+      });
+    }
+  }
+
+  /* ---------- animation loop: eases toward the real scroll position ---------- */
+  var current = window.scrollY;
+  var target = current;
+  var running = false;
+  var last = 0;
+
+  function frame(t) {
+    var dt = last ? Math.min(t - last, 50) : 16.67;
+    last = t;
+    if (reduce) {
+      current = target;
+    } else {
+      var k = 1 - Math.pow(1 - CONFIG.smoothing, dt / 16.67);
+      current += (target - current) * k;
+    }
+    paint(current);
+    if (Math.abs(target - current) > 0.4) {
+      requestAnimationFrame(frame);
+    } else {
+      current = target;
+      paint(current);
+      running = false;
+      last = 0;
+    }
+  }
+  function kick() {
+    target = window.scrollY;
+    if (!running) { running = true; requestAnimationFrame(frame); }
+  }
+
+  window.addEventListener("scroll", kick, { passive: true });
+  window.addEventListener("resize", function () { setMode(); kick(); });
+  window.addEventListener("load", function () { setMode(); kick(); });
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () { fit(); kick(); });
+  }
+
+  setMode();
+  current = target = window.scrollY;
+  paint(current);
+})();
+</script>
+</body>
+</html>
