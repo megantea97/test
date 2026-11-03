@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ACH Debit</title>
+<meta name="description" content="Every U.S. account, the same, or next day.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --ink: #0d0b14;
+    --purple: #9176f9;
+    --purple-soft: #cabbfc;
+    --purple-num: #d6cdf8;
+    --pill-bg-a: #e5ddfb;
+    --pill-bg-b: #d9d0f6;
+    --card-light: #faf9ff;
+    --card-dark: #1c0f40;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --serif: "Playfair Display", "Times New Roman", serif;
+
+    /* Scroll distance used for each slide-to-slide transition */
+    --step: 200vh;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: #fff;
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ---------- Scroll track + pinned stage ---------- */
+  .track {
+    position: relative;
+    /* 1 viewport for the stage + one --step per transition (3 slides = 2 transitions) */
+    height: calc(100vh + (var(--slides, 3) - 1) * var(--step));
+  }
+  .stage {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100svh;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  /* ---------- Airy background glows ---------- */
+  .glows { position: absolute; inset: 0; pointer-events: none; }
+  .glow {
+    position: absolute;
+    border-radius: 50%;
+    will-change: transform;
+  }
+  .glow > i {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    animation: drift 14s ease-in-out infinite alternate;
+  }
+  .glow.g1 { width: 46vw; height: 46vw; left: -12vw; top: -14vw; }
+  .glow.g1 > i { background: radial-gradient(circle, rgba(145,118,249,.15) 0%, rgba(145,118,249,0) 68%); }
+  .glow.g2 { width: 38vw; height: 38vw; right: -10vw; bottom: -12vw; }
+  .glow.g2 > i { background: radial-gradient(circle, rgba(190,172,252,.24) 0%, rgba(190,172,252,0) 68%); animation-duration: 18s; animation-delay: -6s; }
+  .glow.g3 { width: 24vw; height: 24vw; left: 46vw; top: 8vh; }
+  .glow.g3 > i { background: radial-gradient(circle, rgba(145,118,249,.10) 0%, rgba(145,118,249,0) 68%); animation-duration: 22s; animation-delay: -11s; }
+  @keyframes drift {
+    from { transform: translate3d(-3vw, -2vw, 0) scale(1); }
+    to   { transform: translate3d(3vw, 2.5vw, 0) scale(1.12); }
+  }
+
+  /* ---------- Slides ---------- */
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 7vw;
+    visibility: hidden;
+  }
+  .slide.is-live { visibility: visible; }
+  .slide__inner {
+    width: calc(100% / var(--fit, 1));
+    max-width: 1240px;
+    margin: 0 auto;
+    transform: scale(var(--fit, 1));
+    transform-origin: left center;
+  }
+  /* each animated piece */
+  [data-reveal] { will-change: transform, opacity, filter; }
+
+  /* ---------- Shared bits ---------- */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 20px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--pill-bg-a), var(--pill-bg-b));
+    box-shadow: 0 0 0 1px rgba(255,255,255,.7) inset, 0 3px 12px rgba(145,118,249,.14);
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: .01em;
+    text-transform: uppercase;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .pill::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ink);
+  }
+  .serif-accent {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    color: var(--purple);
+  }
+
+  /* ---------- Slide 1 ---------- */
+  .s1 .pill { margin-bottom: clamp(28px, 4.6vh, 44px); }
+  .s1 h1 {
+    margin: 0;
+    font-size: clamp(42px, 5.55vw, 80px);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  .s1 h1 .line { display: block; }
+  .s1 h1 .serif-accent { letter-spacing: -0.01em; }
+  .s1 p {
+    margin: clamp(32px, 6vh, 56px) 0 0;
+    max-width: 1200px;
+    font-size: clamp(14px, 1.05vw, 16px);
+    line-height: 1.55;
+  }
+
+  /* ---------- Slide 2 ---------- */
+  .s2 .inner-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 680px);
+    align-items: center;
+    gap: 3vw;
+  }
+  .s2 .pill { margin-bottom: clamp(24px, 4vh, 40px); }
+  .s2 .big {
+    margin: 0;
+    font-size: clamp(52px, 5.7vw, 82px);
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--purple);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .s2 .lead {
+    margin: clamp(36px, 6vh, 56px) 0 0;
+    font-size: clamp(17px, 1.4vw, 21px);
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.005em;
+  }
+  .s2 .sub {
+    margin: 6px 0 0;
+    max-width: 380px;
+    font-size: clamp(14px, 1.1vw, 16px);
+    line-height: 1.6;
+  }
+  .s2 .source {
+    margin: clamp(32px, 5vh, 52px) 0 0;
+    font-size: 14px;
+    color: var(--purple-soft);
+    letter-spacing: .01em;
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(20px, 3vw, 44px);
+  }
+  .card {
+    min-height: 330px;
+    padding: 40px 36px 32px;
+    border-radius: 14px;
+    background: var(--card-light);
+    box-shadow: 0 24px 60px -18px rgba(145,118,249,.22);
+  }
+  .card h3 {
+    margin: 0 0 22px;
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 500;
+    font-size: clamp(28px, 2.65vw, 38px);
+    line-height: 1.1;
+    letter-spacing: -0.04em;
+    white-space: nowrap;
+    color: var(--purple);
+  }
+  .card .pill-sm {
+    display: inline-block;
+    white-space: nowrap;
+    padding: 9px 14px;
+    border-radius: 999px;
+    background: #ded6f9;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.6) inset;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .card ul { list-style: none; margin: 26px 0 0; padding: 0; }
+  .card li {
+    position: relative;
+    padding-left: 16px;
+    margin-bottom: 14px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #2a2536;
+  }
+  .card li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: .5em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #8840f8;
+  }
+  .card--dark {
+    background: var(--card-dark);
+    box-shadow: 0 28px 60px -18px rgba(28,15,64,.45);
+  }
+  .card--dark h3 { color: #9a7bff; }
+  .card--dark .pill-sm { background: #695a94; color: #fff; box-shadow: 0 0 0 1px rgba(255,255,255,.12) inset; }
+  .card--dark li { color: #eee9ff; }
+
+  /* ---------- Slide 3 ---------- */
+  .s3 h2 {
+    margin: 0 0 clamp(48px, 10vh, 96px);
+    font-size: clamp(42px, 5.55vw, 80px);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  .s3 h2 .serif-accent { padding: 0 .04em; }
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(14px, 1.4vw, 20px);
+  }
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    min-height: 160px;
+    padding: 24px 36px 24px 40px;
+    border-radius: 16px;
+    background: var(--card-light);
+    box-shadow: 0 26px 50px -22px rgba(145,118,249,.22);
+  }
+  .step .n {
+    flex: none;
+    min-width: 44px;
+    font-size: 68px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--purple-num);
+    letter-spacing: -0.02em;
+  }
+  .step p {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: #2a2536;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 900px) {
+    .slide { padding: 0 24px; }
+    .s2 .inner-grid { grid-template-columns: 1fr; gap: 32px; }
+    .cards { grid-template-columns: 1fr 1fr; gap: 14px; }
+    .card { min-height: 0; padding: 22px 20px; }
+    .card h3 { font-size: 28px; margin-bottom: 14px; }
+    .steps { grid-template-columns: 1fr 1fr; }
+    .step { min-height: 0; padding: 20px 18px; }
+    .step .n { font-size: 44px; min-width: 30px; }
+  }
+  @media (max-width: 560px) {
+    .cards { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: 1fr; }
+    .s2 .big { font-size: 56px; }
+  }
+
+</style>
+<noscript><style>.track{height:auto}.stage{position:static;height:auto;overflow:visible}.slide{position:relative;visibility:visible;min-height:100vh}</style></noscript>
+</head>
+
+<body>
+<main class="track" id="track">
+  <div class="stage" id="stage">
+
+    <!-- Soft background glows (parallax with scroll) -->
+    <div class="glows" aria-hidden="true">
+      <div class="glow g1" data-depth="1"><i></i></div>
+      <div class="glow g2" data-depth="-1.4"><i></i></div>
+      <div class="glow g3" data-depth="0.6"><i></i></div>
+    </div>
+
+    <!-- ===================== SLIDE 1 ===================== -->
+    <section class="slide s1" aria-label="ACH Debit overview">
+      <div class="slide__inner">
+        <div data-reveal data-s="0"><span class="pill">ACH Debit</span></div>
+        <h1>
+          <span class="line" data-reveal data-s="0.08">Every U.S. account,</span>
+          <span class="line serif-accent" data-reveal data-s="0.18">the same, or next day.</span>
+        </h1>
+        <p data-reveal data-s="0.32">Your customer authorizes you to debit their bank or credit union account. Your bank originates the debit, and their bank posts it, under the Nacha Operating Rules.</p>
+      </div>
+    </section>
+
+    <!-- ===================== SLIDE 2 ===================== -->
+    <section class="slide s2" aria-label="ACH volume and speeds">
+      <div class="slide__inner">
+        <div class="inner-grid">
+          <div class="left">
+            <div data-reveal data-s="0"><span class="pill">ACH Debit</span></div>
+            <p class="big" data-reveal data-s="0.06"><span data-count="3.52" data-decimals="2">3.52</span> Billion</p>
+            <p class="lead" data-reveal data-s="0.16">ACH payments worth $93 trillion in 2025.</p>
+            <p class="sub" data-reveal data-s="0.2">The ACH Network reaches all U.S. bank and credit union accounts.</p>
+            <p class="source" data-reveal data-s="0.3">NACHA, 2025</p>
+          </div>
+
+          <div class="cards">
+            <article class="card" data-reveal data-s="0.14" data-dx="36">
+              <h3>Same Day ACH</h3>
+              <span class="pill-sm">Same business day, within hours</span>
+              <ul>
+                <li>Three same-day processing windows.</li>
+                <li>Up to $1 million per payment, rising to $10 million on September 17, 2027.</li>
+                <li>1.4 billion Same Day ACH payments worth $3.9 trillion in 2025.</li>
+              </ul>
+            </article>
+            <article class="card card--dark" data-reveal data-s="0.28" data-dx="52">
+              <h3>Standard ACH</h3>
+              <span class="pill-sm">Next business day</span>
+              <ul>
+                <li>Suited to recurring and lower-urgency payments where next-day settlement is enough.</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== SLIDE 3 ===================== -->
+    <section class="slide s3" aria-label="How ACH Debit works">
+      <div class="slide__inner">
+        <h2 data-reveal data-s="0">How <span class="serif-accent">ACH Debit</span> works</h2>
+        <div class="steps">
+          <div class="step" data-reveal data-s="0.1">
+            <span class="n">1</span>
+            <p>Your customer authorizes the debit, typically online, and provides or links their account.</p>
+          </div>
+          <div class="step" data-reveal data-s="0.17">
+            <span class="n">2</span>
+            <p>For online consumer debits, the account is validated before the first debit.</p>
+          </div>
+          <div class="step" data-reveal data-s="0.24">
+            <span class="n">3</span>
+            <p>The debit is submitted for a Same Day ACH window or for standard settlement.</p>
+          </div>
+          <div class="step" data-reveal data-s="0.31">
+            <span class="n">4</span>
+            <p>Funds settle on the same banking day or on the next banking day.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============================================================
+     TWEAK THESE
+     ============================================================ */
+  var CONFIG = {
+    smoothing: 0.04,    // 0 to 1. Lower = floatier, more lag. Higher = snappier.
+    hold: 0.14,         // Share of each step where a slide rests, fully visible, before moving on.
+    enterRise: 70,      // px an element rises from as it fades in.
+    exitRise: 110,      // px an element scrolls upward as it fades out.
+    blur: 5,            // px of blur while moving (0 = crisp, 8+ = dreamier).
+    exitWidth: 0.4,     // Share of a transition the outgoing slide takes to leave.
+    enterDelay: 0.5,    // The next slide waits until this point, so the old one is gone first.
+    enterWidth: 0.34    // Share of a transition the incoming slide takes to arrive.
+  };
+
+  var root   = document.documentElement;
+  var track  = document.getElementById("track");
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var glows  = Array.prototype.slice.call(document.querySelectorAll(".glow"));
+  var N      = slides.length;
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  track.style.setProperty("--slides", N);
+
+  // Cache the animated pieces for each slide
+  var items = slides.map(function (slide) {
+    return Array.prototype.slice.call(slide.querySelectorAll("[data-reveal]")).map(function (el) {
+      var c = el.querySelector("[data-count]");
+      return {
+        el: el,
+        s: parseFloat(el.getAttribute("data-s")) || 0,
+        dx: parseFloat(el.getAttribute("data-dx")) || 0,
+        counter: c,
+        countTo: c ? parseFloat(c.getAttribute("data-count")) : 0,
+        decimals: c ? parseInt(c.getAttribute("data-decimals") || "0", 10) : 0
+      };
+    });
+  });
+
+  /* ---------- helpers ---------- */
+  function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
+  function easeOut(t) { return 1 - Math.pow(1 - t, 4); }          // long, soft landing
+  function easeExit(t) { return t * t * (3 - 2 * t); }           // smoothstep for exits
+
+  /* ---------- fit each slide to short viewports (phones, landscape) ---------- */
+  function fit() {
+    var avail = window.innerHeight - 48;
+    slides.forEach(function (slide) {
+      var inner = slide.querySelector(".slide__inner");
+      var wasLive = slide.classList.contains("is-live");
+      slide.style.visibility = "hidden";
+      inner.style.setProperty("--fit", 1);
+      slide.classList.add("is-live");
+      var h = inner.offsetHeight;
+      var k = h > avail ? Math.max(0.55, avail / h) : 1;
+      inner.style.setProperty("--fit", k.toFixed(4));
+      slide.style.visibility = "";
+      if (!wasLive) slide.classList.remove("is-live");
+    });
+  }
+
+  /* ---------- scroll position -> progress 0 .. N-1 ---------- */
+  function targetProgress() {
+    var top = track.getBoundingClientRect().top;
+    var scrolled = clamp(-top, 0, track.offsetHeight - window.innerHeight);
+    var step = (track.offsetHeight - window.innerHeight) / (N - 1);
+    return step > 0 ? scrolled / step : 0;
+  }
+
+  // Turns raw progress into "virtual position" with a rest period on each slide
+  function virtual(p) {
+    var seg = Math.min(Math.floor(p), N - 2);
+    var f = p - seg;
+    var g = clamp((f - CONFIG.hold) / (1 - CONFIG.hold * 2), 0, 1);
+    return seg + g; // kept linear on purpose: the per-element easing does the smoothing
+  }
+
+  /* ---------- paint ---------- */
+  function paint(p) {
+    var v = N > 1 ? virtual(p) : 0;
+
+    slides.forEach(function (slide, i) {
+      var d = v - i;                       // -1 (waiting) .. 0 (showing) .. 1 (gone)
+      var live = Math.abs(d) < 0.999;
+      slide.classList.toggle("is-live", live);
+      slide.setAttribute("aria-hidden", Math.abs(d) < 0.5 ? "false" : "true");
+      slide.style.pointerEvents = Math.abs(d) < 0.5 ? "auto" : "none";
+      if (!live) return;
+
+      items[i].forEach(function (it) {
+        var o, y, x, blur, sc;
+        if (d <= 0) {
+          // entering: rise, un-blur, settle
+          var a = easeOut(clamp((1 + d - CONFIG.enterDelay - it.s * 0.4) / CONFIG.enterWidth, 0, 1));
+          o = a;
+          y = (1 - a) * CONFIG.enterRise;
+          x = (1 - a) * it.dx;
+          blur = (1 - a) * CONFIG.blur;
+          sc = 0.975 + a * 0.025;
+          if (it.counter) it.counter.textContent = (it.countTo * a).toFixed(it.decimals);
+        } else {
+          // exiting: drift up, soften, fade
+          var b = easeExit(clamp((d - it.s * 0.2) / CONFIG.exitWidth, 0, 1));
+          o = 1 - b;
+          y = -b * CONFIG.exitRise;
+          x = -b * it.dx * 0.5;
+          blur = b * CONFIG.blur;
+          sc = 1 + b * 0.015;
+          if (it.counter) it.counter.textContent = it.countTo.toFixed(it.decimals);
+        }
+
+        if (reduce) {
+          it.el.style.opacity = o.toFixed(3);
+        } else {
+          it.el.style.opacity = o.toFixed(3);
+          it.el.style.transform = "translate3d(" + x.toFixed(2) + "px," + y.toFixed(2) + "px,0) scale(" + sc.toFixed(4) + ")";
+          it.el.style.filter = blur > 0.05 ? "blur(" + blur.toFixed(2) + "px)" : "none";
+        }
+      });
+    });
+
+    // gentle parallax on the background glows
+    if (!reduce) {
+      glows.forEach(function (g) {
+        var depth = parseFloat(g.getAttribute("data-depth")) || 0;
+        g.style.transform = "translate3d(" + (v * depth * 5).toFixed(2) + "vw," + (v * depth * -9).toFixed(2) + "vh,0)";
+      });
+    }
+  }
+
+  /* ---------- animation loop (eases toward the real scroll position) ---------- */
+  var current = targetProgress();
+  var target = current;
+  var running = false;
+  var last = 0;
+
+  function frame(t) {
+    var dt = last ? Math.min(t - last, 50) : 16.67;
+    last = t;
+    if (reduce) {
+      current = target;
+    } else {
+      var k = 1 - Math.pow(1 - CONFIG.smoothing, dt / 16.67);
+      current += (target - current) * k;
+    }
+    paint(current);
+    if (Math.abs(target - current) > 0.0003) {
+      requestAnimationFrame(frame);
+    } else {
+      current = target;
+      paint(current);
+      running = false;
+      last = 0;
+    }
+  }
+  function kick() {
+    target = targetProgress();
+    if (!running) { running = true; requestAnimationFrame(frame); }
+  }
+
+  window.addEventListener("scroll", kick, { passive: true });
+  window.addEventListener("resize", function () { fit(); kick(); });
+  window.addEventListener("load", function () { fit(); kick(); });
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () { fit(); kick(); });
+  }
+
+  fit();
+  current = target = targetProgress();
+  paint(current);
+})();
+</script>
+</body>
+</html>
