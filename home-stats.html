@@ -16,19 +16,17 @@
     --ink: #0f0b1d;
     --accent: #c1b1f6;          /* the lavender used for +, / and API */
     --panel: #efe9fc;
-    --line: #d8ccf6;
+    --line: #cbbcf5;
   }
 
   *, *::before, *::after { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; background: #fdfcff; }
+  html { -webkit-text-size-adjust: 100%; background: transparent; }
   body {
     margin: 0;
-    padding: 24px;
+    padding: 0 0 40px;            /* room under the panel for its soft glow */
     font-family: var(--sans);
     color: var(--ink);
-    background:
-      radial-gradient(60% 80% at 50% 0%, rgba(214,200,250,.28), rgba(214,200,250,0) 70%),
-      #fdfcff;
+    background: transparent;      /* so it sits on whatever the page behind it is */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -37,8 +35,8 @@
   .stats {
     --n: clamp(40px, 6.9vw, 88px);        /* size of the big numbers */
     position: relative;
-    max-width: 1240px;
-    margin: 0 auto;
+    width: 100%;
+    margin: 0;
     padding: clamp(22px, 3.2vw, 42px) clamp(14px, 13.7%, 170px);
     border-radius: 14px;
     background: linear-gradient(180deg, #eee8fb 0%, #f1ecfd 100%);
@@ -113,8 +111,10 @@
   .no-js .d .tape { display: none; }
   .no-js .d .sz { visibility: visible; }
 
+  .rw, .rw * { transition: none !important; }
+
   @media (max-width: 700px) {
-    body { padding: 14px; }
+    body { padding: 0 0 24px; }
     .stats { --n: clamp(30px, 10.4vw, 46px); padding: 26px 12px; display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; column-gap: 8px; justify-content: stretch; }
     .stat { justify-self: center; }
     .label { font-size: 11.5px; max-width: 12ch; }
@@ -207,17 +207,14 @@
       if (e.intersectionRatio >= CONFIG.startAt) root.classList.add("go");
       else if (CONFIG.replay && e.intersectionRatio === 0) {
         // rewind with no animation so it can roll again next time
-        var tapes = panel.querySelectorAll(".tape");
-        Array.prototype.forEach.call(tapes, function (t) { t.style.transition = "none"; });
+        panel.classList.add("rw");
         root.classList.remove("go");
         void panel.offsetWidth;
-        Array.prototype.forEach.call(tapes, function (t) { t.style.transition = ""; t.style.transitionDuration = t.getAttribute("data-dur") || ""; });
+        panel.classList.remove("rw");
       }
     });
   }, { threshold: [0, CONFIG.startAt] }).observe(panel);
 
-  // remember each digit's own timing so a rewind can restore it
-  Array.prototype.forEach.call(panel.querySelectorAll(".tape"), function (t) { t.setAttribute("data-dur", t.style.transitionDuration); });
 })();
 </script>
 </body>
