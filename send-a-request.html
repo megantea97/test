@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Request for Payment</title>
+<meta name="description" content="Send a request. Your customer approves it.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --serif: "Playfair Display", "Times New Roman", serif;
+    --purple: #9176f9;
+    --value: #7f55e8;
+
+    /* Scroll distance the animation plays over */
+    --run: 0vh;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; background: #f6f4f8; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    color: #0a0710;
+    background: #f6f4f8;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ---------- Scroll track + pinned stage ---------- */
+  .track { position: relative; height: calc(100vh + var(--run)); }
+  .stage {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100svh;
+    overflow: hidden;
+    background:
+      radial-gradient(70% 55% at 88% 104%, rgba(165,145,240,.22) 0%, rgba(165,145,240,0) 70%),
+      linear-gradient(180deg, #fefefe 0%, #f6f4f8 46%, #ebe7ef 100%);
+  }
+
+  /* ---------- Layout ---------- */
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 5vw;
+  }
+  .slide__inner {
+    /* --s = how many pixels one "design pixel" is. Everything below is sized from it. */
+    --s: min(0.1vw, 0.162vh);
+    flex: none;
+    width: calc(min(100%, 1240px) / var(--fit, 1));
+    margin: 0 0 0 calc((100% - min(100%, 1240px)) / 2);
+    transform: scale(var(--fit, 1));
+    transform-origin: left center;
+  }
+
+  /* ---------- Header ---------- */
+  .head { text-align: center; }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 1.1em;
+    padding: 0.85em 1.7em;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #e9e2fc, #ddd5f6);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.85) inset, 0 4px 16px rgba(145,118,249,.2);
+    font-size: max(11px, calc(var(--s) * 7.4));
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    color: #1d1830;
+    line-height: 1;
+  }
+  .pill::before {
+    content: "";
+    width: 0.5em;
+    height: 0.5em;
+    border-radius: 50%;
+    background: #1d1830;
+  }
+  .head h1 {
+    margin: calc(var(--s) * 12) 0 0;
+    font-size: max(34px, calc(var(--s) * 38));
+    font-weight: 400;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    color: #0a0710;
+  }
+  .head h1 .line { display: block; }
+  .head h1 .accent {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+    color: var(--purple);
+  }
+  .head .sub {
+    max-width: calc(var(--s) * 470);
+    margin: calc(var(--s) * 14) auto 0;
+    font-size: max(13px, calc(var(--s) * 8.4));
+    line-height: 1.55;
+    color: #322f37;
+  }
+
+  /* ---------- Card + numbered list ---------- */
+  .group { width: calc(var(--s) * 630); margin: calc(var(--s) * 30) auto 0; }
+  .row { display: flex; align-items: flex-start; gap: calc(var(--s) * 56); }
+
+  .cardcol {
+    --u: calc(var(--s) * 220 / 205);        /* one design pixel inside the card */
+    flex: none;
+    width: calc(var(--s) * 220);
+  }
+  .card {
+    position: relative;
+    padding: calc(var(--u) * 24) calc(var(--u) * 27) calc(var(--u) * 18);
+    border-radius: calc(var(--u) * 10);
+    background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(246,243,250,.82));
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.95) inset,
+      0 0 0 1px rgba(214,207,229,.55),
+      0 calc(var(--u) * 16) calc(var(--u) * 36) calc(var(--u) * -14) rgba(110,90,170,.3);
+    will-change: transform, opacity, filter;
+  }
+  .card__title {
+    margin: 0;
+    font-size: calc(var(--u) * 14);
+    font-weight: 300;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    color: #696969;
+  }
+  .card__biz {
+    margin: calc(var(--u) * 7) 0 0;
+    font-size: calc(var(--u) * 6);
+    line-height: 1.2;
+    color: #8a8794;
+  }
+  .card__amt {
+    margin: calc(var(--u) * 4) 0 0;
+    font-size: calc(var(--u) * 29);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.055em;
+    color: #261b3a;
+  }
+  .card__rule {
+    height: 1px;
+    margin: calc(var(--u) * 13) 0 calc(var(--u) * 6);
+    background: #d6d2df;
+    transform-origin: left center;
+  }
+  .rw { overflow: hidden; }
+  .r {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: calc(var(--u) * 5.4) 0;
+    font-size: calc(var(--u) * 7);
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  .r span { color: #6f6b78; }
+  .r b { font-weight: 600; color: var(--value); }
+  .pay { padding-top: calc(var(--u) * 8); }
+  .pay__btn {
+    display: block;
+    width: 100%;
+    height: calc(var(--u) * 24);
+    border-radius: 999px;
+    border: 0;
+    background: linear-gradient(180deg, #6a50e2, #553ccb);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.18) inset, 0 calc(var(--u) * 6) calc(var(--u) * 14) calc(var(--u) * -6) rgba(85,60,203,.55);
+    color: #fff;
+    font: inherit;
+    font-size: calc(var(--u) * 9.5);
+    font-weight: 400;
+    letter-spacing: .005em;
+    cursor: default;
+  }
+  .pay__by { display: flex; justify-content: center; padding-top: calc(var(--u) * 9); }
+  .pay__by img { display: block; height: calc(var(--u) * 11); width: auto; }
+
+  /* numbered list */
+  .list {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    grid-template-rows: repeat(5, 1fr);
+    padding-top: calc(var(--s) * 3);
+  }
+  .li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: calc(var(--s) * 10);
+    align-items: start;
+    will-change: transform, opacity, filter;
+  }
+  .li__n {
+    display: grid;
+    place-items: center;
+    width: max(22px, calc(var(--s) * 16));
+    height: max(22px, calc(var(--s) * 16));
+    border-radius: 40%;
+    background: linear-gradient(180deg, #efe9fe, #d9d0f2);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.8) inset;
+    font-size: max(11px, calc(var(--s) * 7.4));
+    font-weight: 500;
+    color: #1d1830;
+  }
+  .li h3 {
+    margin: 0;
+    font-size: max(12.5px, calc(var(--s) * 8.4));
+    font-weight: 600;
+    line-height: 1.3;
+    color: #211e27;
+  }
+  .li p {
+    margin: calc(var(--s) * 4) 0 0;
+    font-size: max(12px, calc(var(--s) * 7.8));
+    line-height: 1.45;
+    color: #47444b;
+  }
+
+  /* ---------- Bottom features ---------- */
+  .foot {
+    display: grid;
+    grid-template-columns: calc(var(--s) * 276) 1fr;
+    column-gap: 0;
+    margin-top: calc(var(--s) * 24);
+  }
+  .ft { padding-right: calc(var(--s) * 12); will-change: transform, opacity, filter; }
+  .ft { --ico: max(17px, calc(var(--s) * 11)); }
+  .ico { display: block; width: auto; margin-bottom: calc(var(--s) * 5); }
+  .ico--lock { height: var(--ico); }
+  .ico--dots { height: calc(var(--ico) * 22 / 52); margin-top: calc(var(--ico) * 15 / 52); margin-bottom: calc(var(--s) * 5 + var(--ico) * 15 / 52); }
+  .ft h3 { margin: 0; font-size: max(12.5px, calc(var(--s) * 8.4)); font-weight: 600; line-height: 1.3; color: #211e27; }
+  .ft p  { margin: calc(var(--s) * 3) 0 0; font-size: max(12px, calc(var(--s) * 7.8)); line-height: 1.45; color: #47444b; max-width: calc(var(--s) * 235); }
+
+  [data-p] { will-change: transform, opacity, filter; }
+
+  /* ---------- Small screens: normal scrolling ---------- */
+  .flow .track { height: auto; }
+  .flow .stage { position: relative; height: auto; overflow: hidden; }
+  .flow .slide { position: relative; inset: auto; padding: 56px 20px 72px; }
+  .flow .slide__inner { --s: 1.55px; flex: 1; width: 100%; margin: 0; transform: none; }
+  .flow .head h1 { font-size: clamp(36px, 10vw, 50px); }
+  .flow .head .sub { max-width: 440px; }
+  .flow .group { width: 100%; max-width: 440px; margin-top: 40px; }
+  .flow .row { flex-direction: column; gap: 36px; }
+  .flow .cardcol { --u: calc(var(--s) * 1.12); width: 100%; }
+  .flow .list { grid-template-rows: none; row-gap: 26px; width: 100%; height: auto !important; padding-top: 0; }
+  .flow .foot { grid-template-columns: 1fr; row-gap: 28px; margin-top: 40px; }
+  .flow .ft p { max-width: none; }
+
+  @media (prefers-reduced-motion: reduce) { [data-p], .card, .li, .ft { transition: none; } }
+</style>
+<noscript><style>.track{height:auto}.stage{position:relative;height:auto;min-height:100vh}.slide{position:relative;inset:auto;min-height:100vh}</style></noscript>
+</head>
+
+<body>
+<main class="track" id="track">
+  <div class="stage" id="stage">
+    <section class="slide" aria-label="Request for Payment">
+      <div class="slide__inner" id="inner">
+
+        <div class="head" id="head">
+          <div data-p="pill"><span class="pill">Request for Payment</span></div>
+          <h1>
+            <span class="line" data-p="h1a">Send a request.</span>
+            <span class="line accent" data-p="h1b">Your customer approves it.</span>
+          </h1>
+          <p class="sub" data-p="sub">The request goes through the banking system to your customer’s bank. They approve it in their own banking app, and their bank sends an instant payment over the RTP network or the FedNow Service.</p>
+        </div>
+
+        <div class="group">
+          <div class="row">
+
+            <!-- ============ The payment request card ============ -->
+            <div class="cardcol" id="cardcol">
+              <div class="card" id="card">
+                <h2 class="card__title" data-c>Payment Request</h2>
+                <p class="card__biz" data-c>Your Business</p>
+                <p class="card__amt" data-c>$250.00</p>
+                <div class="card__rule" data-c data-scale></div>
+
+                <div class="r" data-c><span>Due</span><b>Nov 15</b></div>
+
+                <div class="rw" data-row="1"><div class="rw__in"><div class="r"><span>Expires</span><b>Nov 20, 11:59 P.M.</b></div></div></div>
+                <div class="rw" data-row="2"><div class="rw__in"><div class="r"><span>Reference</span><b>INV-1042</b></div></div></div>
+                <div class="rw" data-row="3"><div class="rw__in"><div class="r"><span>Details</span><b>Invoice attached</b></div></div></div>
+                <div class="rw" data-row="4"><div class="rw__in"><div class="pay">
+                  <button class="pay__btn" type="button" tabindex="-1">Pay Now</button>
+                  <div class="pay__by"><img alt="Powered by wyzia" src="data:image/png;base64,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"></div>
+                </div></div></div>
+              </div>
+            </div>
+
+            <!-- ============ The numbered list ============ -->
+            <div class="list" id="list">
+              <div class="li" data-li="1"><span class="li__n">1</span><div><h3>Prefilled</h3><p>Amount, due date and requester details arrive filled in.</p></div></div>
+              <div class="li" data-li="2"><span class="li__n">2</span><div><h3>Choice</h3><p>The user can choose to pay now, schedule the payment, or decline.</p></div></div>
+              <div class="li" data-li="3"><span class="li__n">3</span><div><h3>Expiry date</h3><p>Stops being payable after a set date and time.</p></div></div>
+              <div class="li" data-li="4"><span class="li__n">4</span><div><h3>End-to-end reference</h3><p>Stays the same from request to payment.</p></div></div>
+              <div class="li" data-li="5"><span class="li__n">5</span><div><h3>Remittance details</h3><p>A short description, a link, or structured data.</p></div></div>
+            </div>
+
+          </div>
+
+          <!-- ============ Bottom features ============ -->
+          <div class="foot" id="foot">
+            <div class="ft" data-ft="1">
+              <img class="ico ico--lock" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC0AAAA0CAYAAAAew7HJAAADBUlEQVR42u2aX07bQBDGv9l1S8MfyZyg5gRNXqtCnROQG5C+VkDcEyS5gSkRr80Nyg1YSsQr9AT1DbBaaFqU3elDA4KodhzHcYLqefVa/nk8u/PNjAkZmOeyDfwqG2NcZrwEyBleCon4qxBC+aqkkJHRdLB9hw03DJs6QHb8ag4BOpZStH1VCnKH9ly22fSbhtlLc78g8kn8bvtqPcwF2nP7jjHmhBnOlF85kFJU03hdzAkYABytzYnn9p2ZeTpj4BGP31YmCZXEntbaNGcAPPT40ufMPb23eV0H6NOYZSGzOQCgLMsKAGAwGDhCUA0Q28wc+8LMotrpJTsWrURvRtRgjnsgH1jWSstXNPqJAwDKc/v+YKA9ItGIfgY3AahMPP3+9XVZSrqIBka701tpJXnY7psffhx4Um+PjWnLQj3mnYOkwADQ6a15AEdCCaFrmWxEZryKvmrak+46Zo65h95mdHpQOWrjHZ6tdieF7vTWFIAwwkFOVkdehKagy9TagRCVBW3PvbIzzYhZGTPHJJIXiwk9rT1JaGucsNfaRKbfv5kyTUyTHZ2sTHmYlJInl8mE/UytG1UwPILe3/rZYDatOcOOfBXR+vil1P4n9P7WTZMZrUWM4VFwmkDFzRv9w+HZsg8A5LlXtjHPL2aklbO0UMrbDV+th0LrZ7UnAAwAttZL9bsjb2ecsCeiIJ/YJQegnZiCYRuAb8UIIkgpKr5aCfJ0p+f2u1rztwgBUL7LiFGCSE3bVEljvioFRLiME1QLmcbHCapCMBXQBXQBXUAX0AV0AV1A/2fQ7Myv+iYnTm+LmA6ms7/Vb+YNPGxlREGHwxqRTx/MskfEuGntbd7UgbxqRHbGFNmnAGAZw10iiitunbxCJW4YNVxx/LBZcwKQu+DNmuDwbHnjfiNKKd9FjRSwMI0aqj46PXxVCrTm6oKCh1rzo8H//ZF3dL56KaWo5NWYSRgSSkpROTpfvRw7/Nzd/F4DRI1A29F9kdl5FoBiNgfDSVi62Xia3xuQslGTZN0fnrlSBF7pk14AAAAASUVORK5CYII=">
+              <h3>Instant, final settlement</h3>
+              <p>Funds arrive in seconds and cannot be reversed by the payer. The payer receives immediate confirmation.</p>
+            </div>
+            <div class="ft" data-ft="2">
+              <img class="ico ico--dots" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEYAAAAWCAYAAAB9oOpzAAADKklEQVR42u1YQXLaQBDsmc2FGKf0BPKC4GsKbPEC7BcYX1PE4BcYXmAIlK+GF9h+AXKgcuYH0RNUwTZVLrSTAyZlsLRIYo/ZE2il3eme2emdIWwZTfelGIYvRQBQigKAg46X82BpNF1xgGc3DMVZ7qF8AH7Hy/n29kiPgaIXmhdES0OLrgHkvH9DAoDulOJ2VgDfy481gE8BcSMNI0xFpNsb5wfZyNgNwztizg+fGyLSSWoAEbd+/My10xistb4VQTHhJ75SXEnjABsYaN2LTzcAahkcNOiN9862vfTt62NRKYyiPWgcQRhK5fpXfro9Eu1g4NWPxuHzVcYFAaD2+r0xUjKSAgCOUjRquvOC6SWbGHh13rVIc5cEp0Wa9fLTcey81llJ+UeO1vrWlLNsYuDlGaNLG9mfgKs4o0VQ2HV9ERSXSTsqT9jFQPXyn2OCujWdbyIZimAqgMvERyJSiE9kaIuIv2m0mRjyAH3/+qcKkGtYfyoi3bfPmPjLlmhJhUGEK2ROVuQrRWuKsFQVGZkWThkF7f5kr/X2Wb00axGxlQjIgoFIugyYmKOzTZnseDlf6/DMktHeJikA0J/stwDx7BCfBQMdMRHFERP0J9G3w/5k3wMQWLD7PuNcYpnPgkEEDuP/iBxs8LxTL83d6DvJzAXgWNi/mnEuscRnw0A+A/IQrwD6ZvNStUxcfGPHL+KeH84v31/pny5NypQqi2XCID7VSzOXiEemWgWAB8jDUhbjirLV+ZQuEaYbct0w10Zv5ZqrcYXlypuAbm+oSEHEqGKpMCiFE3otun7bkV/ye+OPn6MrabIVZWdRFbdtDLy8Ci8u7BitI6vs3jg/2Iyi7EZHtyFsY2AA6I8/3Yno7m73BXPvhJlPdpT4QCmqxE3axrDWdqiXHwcEOk29IGTYH+drydoONMqgaInbDrYw8Drr+ZqIbqcKPC0XSUgBgOtf+alSfEBEfnJVoalSfJCEFJsYYlubizBsEaga492ASIbMqrNLa9OsVuQBerhLa3MXDLQ1NEszFyQOgR0ACENMk3ovMYDForAqTQQ6+KD2vY5Hga09smD4C9LIESVQBJbjAAAAAElFTkSuQmCC">
+              <h3>Status tracking</h3>
+              <p>See where each request stands.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============================================================
+     TWEAK THESE
+     ============================================================ */
+  var CONFIG = {
+    smoothing: 0.04,   // 0 to 1. Lower = floatier, more lag. Higher = snappier.
+    blur: 5,           // px of blur while things fade in (0 = crisp).
+    rise: 44,          // px the header, card and list items rise from.
+    flowBreakpoint: 900,
+    duration: 6000,    // ms. The whole sequence, start to finish, once the section is on screen.
+    startAt: 0.4,      // how much of the section must be on screen before it starts (0 to 1).
+
+    /* When each piece arrives, as a share of the total duration: [start, end] */
+    W: {
+      pill: [0.01, 0.08],
+      h1a:  [0.03, 0.12],
+      h1b:  [0.06, 0.16],
+      sub:  [0.10, 0.20],
+      card: [0.14, 0.28],   // the card with state 1 (amount and Due)
+      li1:  [0.20, 0.31],   // numbered items 1 and 2 come with state 1
+      li2:  [0.24, 0.35],
+      row1: [0.34, 0.43],   // Expires        (state 2)
+      li3:  [0.36, 0.45],   //   + item 3
+      row2: [0.48, 0.57],   // Reference      (state 3)
+      li4:  [0.50, 0.59],   //   + item 4
+      row3: [0.62, 0.71],   // Details        (state 4)
+      row4: [0.65, 0.75],   // Pay Now + Powered by
+      li5:  [0.64, 0.73],   //   + item 5
+      /* a pause here, then the two bottom blocks arrive once everything above is done */
+      ft1:  [0.84, 0.92],
+      ft2:  [0.87, 0.95]
+    }
+  };
+
+  var root   = document.documentElement;
+  var track  = document.getElementById("track");
+  var inner  = document.getElementById("inner");
+  var head   = document.getElementById("head");
+  var cardcol = document.getElementById("cardcol");
+  var card   = document.getElementById("card");
+  var list   = document.getElementById("list");
+  var foot   = document.getElementById("foot");
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var P = {};   // header pieces by name
+  Array.prototype.forEach.call(document.querySelectorAll("[data-p]"), function (el) { P[el.getAttribute("data-p")] = el; });
+  var cparts = Array.prototype.slice.call(document.querySelectorAll("[data-c]"));
+  var rows = Array.prototype.slice.call(document.querySelectorAll("[data-row]")).map(function (w) {
+    return { wrap: w, inner: w.firstElementChild, h: 0 };
+  });
+  var lis = Array.prototype.slice.call(document.querySelectorAll("[data-li]"));
+  var fts = Array.prototype.slice.call(document.querySelectorAll("[data-ft]"));
+
+  var flow = false;
+
+  function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
+  function easeOut(t) { return 1 - Math.pow(1 - t, 4); }
+  function easeIO(t) { return t * t * (3 - 2 * t); }
+  function span(v, r) { return clamp((v - r[0]) / (r[1] - r[0]), 0, 1); }
+
+  /* ---------- measuring: lock the card column to its final height so nothing shifts ---------- */
+  function measure() {
+    rows.forEach(function (r) { r.wrap.style.height = ""; });
+    cardcol.style.height = "";
+    var finalH = card.offsetHeight;
+    rows.forEach(function (r) { r.h = r.inner.offsetHeight; });
+    cardcol.style.height = finalH + "px";
+    list.style.height = flow ? "" : finalH + "px";
+  }
+
+  function fit() {
+    inner.style.setProperty("--fit", 1);
+    if (flow) return;
+    var avail = window.innerHeight - 40;
+    var h = inner.offsetHeight;
+    var k = h > avail ? Math.max(0.5, avail / h) : 1;
+    inner.style.setProperty("--fit", k.toFixed(4));
+  }
+
+  function setMode() {
+    flow = window.innerWidth <= CONFIG.flowBreakpoint;
+    root.classList.toggle("flow", flow);
+    measure();
+    fit();
+  }
+
+  /* ---------- painting helpers ---------- */
+  function rise(el, a, dist, scaleFrom) {
+    el.style.opacity = a.toFixed(3);
+    if (reduce) return;
+    var sc = scaleFrom ? (scaleFrom + (1 - scaleFrom) * a) : 1;
+    el.style.transform = "translate3d(0," + ((1 - a) * dist).toFixed(2) + "px,0)" + (scaleFrom ? " scale(" + sc.toFixed(4) + ")" : "");
+    var b = (1 - a) * CONFIG.blur;
+    el.style.filter = b > 0.05 ? "blur(" + b.toFixed(2) + "px)" : "none";
+  }
+  function win(v, name) { return easeOut(span(v, CONFIG.W[name])); }
+
+  function paintAll(pHead, pCard, pLis, pFoot) {
+    var W = CONFIG.W;
+
+    // header
+    rise(P.pill, win(pHead, "pill"), CONFIG.rise);
+    rise(P.h1a,  win(pHead, "h1a"),  CONFIG.rise);
+    rise(P.h1b,  win(pHead, "h1b"),  CONFIG.rise);
+    rise(P.sub,  win(pHead, "sub"),  CONFIG.rise);
+
+    // card shell, then its contents one after another
+    var ca = win(pCard, "card");
+    rise(card, ca, CONFIG.rise * 1.3, 0.97);
+    cparts.forEach(function (el, k) {
+      var s = W.card[0] + 0.035 + k * 0.012;
+      var a = easeOut(span(pCard, [s, s + (W.card[1] - W.card[0]) * 0.85]));
+      el.style.opacity = a.toFixed(3);
+      if (reduce) return;
+      if (el.hasAttribute("data-scale")) el.style.transform = "scaleX(" + a.toFixed(3) + ")";
+      else el.style.transform = "translate3d(0," + ((1 - a) * 12).toFixed(2) + "px,0)";
+    });
+
+    // the rows that grow the card
+    rows.forEach(function (r, k) {
+      var name = "row" + (k + 1);
+      var t = span(pCard, W[name]);
+      var h = reduce ? r.h : r.h * easeIO(t);
+      r.wrap.style.height = h.toFixed(2) + "px";
+      var a = easeOut(clamp((t - 0.15) / 0.85, 0, 1));
+      r.inner.style.opacity = a.toFixed(3);
+      if (!reduce) r.inner.style.transform = "translate3d(0," + ((1 - a) * 12).toFixed(2) + "px,0)";
+    });
+
+    // numbered items
+    lis.forEach(function (el, k) {
+      var v = Array.isArray(pLis) ? pLis[k] : pLis;
+      rise(el, win(v, "li" + (k + 1)), 30);
+    });
+
+    // bottom features
+    fts.forEach(function (el, k) {
+      var v = Array.isArray(pFoot) ? pFoot[k] : pFoot;
+      rise(el, win(v, "ft" + (k + 1)), 30);
+    });
+  }
+
+  function paint(y) {
+    var vh = window.innerHeight;
+
+    if (flow) {
+      // normal scrolling: a virtual "p" is worked out from how far the card has scrolled up
+      var headTop = head.getBoundingClientRect().top;
+      var pHeadMap = function (k) { return clamp((vh * 0.97 - headTop) / (vh * 0.34) - k * 0.16, 0, 1) * 0.21; };
+      var cardTop = cardcol.getBoundingClientRect().top;
+      var q = clamp((vh * 0.9 - cardTop) / (vh * 0.62), 0, 1.15);
+      var pCard = 0.14 + q * 0.7;
+      var listTop = list.getBoundingClientRect().top;
+      var lm = function (k) { return clamp((vh * 0.97 - listTop) / (vh * 0.3) - k * 0.2, 0, 1); };
+      var footTop = foot.getBoundingClientRect().top;
+      var fm = function (k) { return clamp((vh * 0.97 - footTop) / (vh * 0.25) - k * 0.2, 0, 1); };
+
+      // headings: feed each piece its own mapped progress
+      rise(P.pill, easeOut(pHeadMap(0) / 0.21), CONFIG.rise);
+      rise(P.h1a,  easeOut(pHeadMap(1) / 0.21), CONFIG.rise);
+      rise(P.h1b,  easeOut(pHeadMap(2) / 0.21), CONFIG.rise);
+      rise(P.sub,  easeOut(pHeadMap(3) / 0.21), CONFIG.rise);
+
+      // reuse the card painter for card + rows, with headings and lists handled above/below
+      paintCardOnly(pCard);
+      lis.forEach(function (el, k) { rise(el, easeOut(lm(k)), 30); });
+      fts.forEach(function (el, k) { rise(el, easeOut(fm(k)), 30); });
+      return;
+    }
+
+    paintAll(autoP, autoP, autoP, autoP);
+  }
+
+  function paintCardOnly(pCard) {
+    var W = CONFIG.W;
+    var ca = win(pCard, "card");
+    rise(card, ca, CONFIG.rise * 1.3, 0.97);
+    cparts.forEach(function (el, k) {
+      var s = W.card[0] + 0.035 + k * 0.012;
+      var a = easeOut(span(pCard, [s, s + (W.card[1] - W.card[0]) * 0.85]));
+      el.style.opacity = a.toFixed(3);
+      if (reduce) return;
+      if (el.hasAttribute("data-scale")) el.style.transform = "scaleX(" + a.toFixed(3) + ")";
+      else el.style.transform = "translate3d(0," + ((1 - a) * 12).toFixed(2) + "px,0)";
+    });
+    rows.forEach(function (r, k) {
+      var t = span(pCard, W["row" + (k + 1)]);
+      r.wrap.style.height = (reduce ? r.h : r.h * easeIO(t)).toFixed(2) + "px";
+      var a = easeOut(clamp((t - 0.15) / 0.85, 0, 1));
+      r.inner.style.opacity = a.toFixed(3);
+      if (!reduce) r.inner.style.transform = "translate3d(0," + ((1 - a) * 12).toFixed(2) + "px,0)";
+    });
+  }
+
+  /* ---------- phones and tablets: normal scrolling, reveals follow the scroll position ---------- */
+  var current = window.scrollY, target = current, running = false, last = 0;
+
+  function frame(ts) {
+    var dt = last ? Math.min(ts - last, 50) : 16.67;
+    last = ts;
+    if (reduce) {
+      current = target;
+    } else {
+      var k = 1 - Math.pow(1 - CONFIG.smoothing, dt / 16.67);
+      current += (target - current) * k;
+    }
+    paint(current);
+    if (Math.abs(target - current) > 0.4) {
+      requestAnimationFrame(frame);
+    } else {
+      current = target;
+      paint(current);
+      running = false;
+      last = 0;
+    }
+  }
+  function kick() {
+    if (!flow) return;
+    target = window.scrollY;
+    if (!running) { running = true; requestAnimationFrame(frame); }
+  }
+
+  /* ---------- desktop: plays by itself once the section is on screen ---------- */
+  var autoP = 0, t0 = 0, raf = 0, started = false;
+
+  function tick(ts) {
+    if (!t0) t0 = ts;
+    autoP = clamp((ts - t0) / CONFIG.duration, 0, 1);
+    paint(0);
+    raf = autoP < 1 ? requestAnimationFrame(tick) : 0;
+  }
+  function play() {
+    if (flow || started) return;
+    started = true;
+    if (reduce) { autoP = 1; paint(0); return; }
+    t0 = 0;
+    raf = requestAnimationFrame(tick);
+  }
+  function reset() {
+    // once it has fully left the screen, rewind so it plays again on the way back
+    if (!started) return;
+    started = false;
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0; autoP = 0;
+    if (!flow) paint(0);
+  }
+
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.intersectionRatio >= CONFIG.startAt) play();
+        else if (e.intersectionRatio === 0) reset();
+      });
+    }, { threshold: [0, CONFIG.startAt] }).observe(track);
+  } else {
+    autoP = 1; started = true;
+  }
+
+  window.addEventListener("scroll", kick, { passive: true });
+  window.addEventListener("resize", function () { setMode(); if (flow) kick(); else paint(0); });
+  window.addEventListener("load", function () { setMode(); if (flow) kick(); else paint(0); });
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () { measure(); fit(); if (flow) kick(); else paint(0); });
+  }
+
+  setMode();
+  current = target = window.scrollY;
+  paint(current);
+})();
+</script>
+</body>
+</html>
