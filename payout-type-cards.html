@@ -8,15 +8,16 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
 
 <style>
   :root {
     --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --serif: "Playfair Display", "Times New Roman", serif;
     --dot: #8840f8;
 
     /* Scroll distance the animation plays over */
-    --run: 220vh;
+    --run: 260vh;
   }
 
   *, *::before, *::after { box-sizing: border-box; }
@@ -68,9 +69,9 @@
     padding: 0 7vw;
   }
   .slide__inner {
-    width: calc(100% / var(--fit, 1));
-    max-width: 1240px;
-    margin: 0 auto;
+    flex: none;
+    width: calc(min(100%, 1240px) / var(--fit, 1));
+    margin: 0 0 0 calc((100% - min(100%, 1240px)) / 2);
     transform: scale(var(--fit, 1));
     transform-origin: left center;
   }
@@ -80,6 +81,50 @@
     gap: clamp(18px, 2.1vw, 30px);
   }
   .cell { display: flex; }
+
+  /* ---------- Header ---------- */
+  .head { margin-bottom: clamp(44px, 9vh, 96px); }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 20px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #6f619b, #5e5189);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.14) inset, 0 8px 24px rgba(60,30,140,.35);
+    font-size: 14px;
+    letter-spacing: .01em;
+    text-transform: uppercase;
+    color: #fff;
+    line-height: 1;
+  }
+  .pill::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #fff;
+  }
+  .head h1 {
+    margin: clamp(26px, 4.4vh, 44px) 0 0;
+    font-size: clamp(38px, 5.2vw, 76px);
+    font-weight: 400;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+  }
+  .head .line { display: block; }
+  .head .accent {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+    color: #c6b6fb;
+  }
+  .head .sub {
+    margin: clamp(26px, 5vh, 48px) 0 0;
+    font-size: clamp(13px, 1.1vw, 16px);
+    line-height: 1.5;
+  }
 
   /* ---------- Glass card ---------- */
   .card {
@@ -180,7 +225,9 @@
   .flow .track { height: auto; }
   .flow .stage { position: relative; height: auto; overflow: hidden; }
   .flow .slide { position: relative; inset: auto; padding: 56px 20px 64px; }
-  .flow .slide__inner { width: 100%; transform: none; }
+  .flow .slide__inner { flex: 1; width: 100%; margin: 0; transform: none; }
+  .flow .head { margin-bottom: 40px; }
+  .flow .head h1 { font-size: clamp(36px, 10vw, 52px); }
   .flow .cards { grid-template-columns: 1fr; gap: 20px; }
   .flow .card { min-height: 0; padding: 30px 22px 26px; border-radius: 28px; }
   .flow .glow.g1 { width: 120vw; height: 120vw; }
@@ -199,6 +246,15 @@
 
     <section class="slide" aria-label="Three ways to get paid">
       <div class="slide__inner">
+        <div class="head" id="head">
+          <div data-h><span class="pill">Three ways to get paid</span></div>
+          <h1>
+            <span class="line" data-h>Request it, debit it,</span>
+            <span class="line accent" data-h>or take a card.</span>
+          </h1>
+          <p class="sub" data-h>Choose by how your customer prefers to pay. All three run through one API.</p>
+        </div>
+
         <div class="cards" id="cards">
 
           <!-- ============ CARD 1 ============ -->
@@ -274,8 +330,12 @@
     rise: 120,         // px each card rises from.
     partRise: 26,      // px the text inside each card rises from.
     blur: 5,           // px of blur while moving (0 = crisp).
-    cardGap: 0.2,      // How far apart the cards start (share of the full scroll).
-    cardWidth: 0.38,   // How long each card takes to arrive (share of the full scroll).
+    headRise: 56,      // px the headline pieces rise from.
+    headGap: 0.05,     // How far apart the headline pieces start (share of the full scroll).
+    headWidth: 0.28,   // How long each headline piece takes to arrive.
+    cardStart: 0.24,   // When the first card starts (share of the full scroll).
+    cardGap: 0.15,     // How far apart the cards start.
+    cardWidth: 0.32,   // How long each card takes to arrive.
     flowBreakpoint: 900 // Below this width the page scrolls normally.
   };
 
@@ -284,6 +344,8 @@
   var inner  = document.querySelector(".slide__inner");
   var glows  = Array.prototype.slice.call(document.querySelectorAll(".glow"));
   var cells  = Array.prototype.slice.call(document.querySelectorAll(".cell"));
+  var head   = document.getElementById("head");
+  var heads  = Array.prototype.slice.call(document.querySelectorAll("[data-h]"));
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   var cards = cells.map(function (cell) {
@@ -315,6 +377,16 @@
     fit();
   }
 
+  /* ---------- paint one headline piece ---------- */
+  function paintHead(el, T) {
+    var a = easeOut(clamp(T, 0, 1));
+    el.style.opacity = a.toFixed(3);
+    if (reduce) return;
+    el.style.transform = "translate3d(0," + ((1 - a) * CONFIG.headRise).toFixed(2) + "px,0)";
+    var b = (1 - a) * CONFIG.blur;
+    el.style.filter = b > 0.05 ? "blur(" + b.toFixed(2) + "px)" : "none";
+  }
+
   /* ---------- paint one card at master time T (0 = hidden, 1 = arrived) ---------- */
   function paintCard(c, T) {
     var a = easeOut(clamp(T, 0, 1));
@@ -343,6 +415,10 @@
     var vh = window.innerHeight;
 
     if (flow) {
+      var headTop = head.getBoundingClientRect().top + window.scrollY - y;
+      heads.forEach(function (el, k) {
+        paintHead(el, (vh * 0.97 - headTop) / (vh * 0.3) - k * 0.14);
+      });
       cards.forEach(function (c) {
         var docTop = c.cell.getBoundingClientRect().top + window.scrollY;
         var top = docTop - y;
@@ -355,8 +431,12 @@
     var range = track.offsetHeight - vh;
     var p = range > 0 ? clamp((y - trackTop) / range, 0, 1) : 1;
 
+    heads.forEach(function (el, k) {
+      paintHead(el, (p - (0.02 + k * CONFIG.headGap)) / CONFIG.headWidth);
+    });
+
     cards.forEach(function (c, i) {
-      var start = 0.03 + i * CONFIG.cardGap;
+      var start = CONFIG.cardStart + i * CONFIG.cardGap;
       paintCard(c, (p - start) / CONFIG.cardWidth);
     });
 
