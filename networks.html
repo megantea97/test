@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Networks</title>
+<meta name="description" content="On the networks. 24/7 on every instant payment rail, including weekends and holidays. 150M+ enrolled accounts that can receive payouts by email or U.S. mobile number. 2,400+ banking and credit union apps offer Zelle. 1,800+ financial institutions participate in the FedNow Service.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --serif: "Playfair Display", "Times New Roman", serif;
+    --num: #9176f9;                 /* the purple of the big numbers */
+    --accent: #c6b6fb;              /* the lavender of "networks" */
+    --ink: #ffffff;
+    --p: 1.3em;                     /* height of one digit slot (a little tall so old-style digits never get clipped) */
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; background: transparent; }
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--sans);
+    color: var(--ink);
+    background: transparent;        /* nothing behind it: it sits on whatever section you place it in */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ---------- The island ---------- */
+  .networks {
+    --n: clamp(46px, 5.4vw, 92px);          /* size of the big numbers */
+    width: 100%;
+    padding: clamp(40px, 7vw, 110px) 8.1vw clamp(40px, 7vw, 110px) 10.7vw;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 48px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(38px, 5.37vw, 92px);
+    font-weight: 400;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+  h1 .accent {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+    color: var(--accent);
+  }
+
+  /* ---------- The stat that changes ---------- */
+  .slot {
+    flex: none;
+    width: clamp(260px, 23vw, 420px);
+    display: grid;                    /* all four share one cell, so nothing jumps when they swap */
+    align-items: start;
+  }
+  .s {
+    grid-area: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    visibility: hidden;
+    opacity: 0;
+  }
+  .s.on { visibility: visible; opacity: 1; }
+  .started .s.on { animation: enter .5s cubic-bezier(.2,.7,.2,1) both; }
+  .started .s.off { animation: leave .4s cubic-bezier(.5,0,.8,.4) both; }
+  @keyframes enter {
+    from { opacity: 0; transform: translate3d(0, 14px, 0); }
+    to   { opacity: 1; transform: none; }
+  }
+  @keyframes leave {
+    from { opacity: 1; transform: none; visibility: visible; }
+    99%  { visibility: visible; }
+    to   { opacity: 0; transform: translate3d(0, -14px, 0); visibility: hidden; }
+  }
+
+  .num {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: var(--n);
+    line-height: var(--p);
+    color: var(--num);
+    white-space: pre;
+  }
+  .num .ch { display: inline-block; }
+  .s .num { opacity: 0; }
+  .s.go .num { opacity: 1; }
+  .label {
+    margin: calc(var(--n) * .25) 0 0;
+    font-size: clamp(13px, 1.05vw, 17px);
+    line-height: 1.75;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  /* ---------- Rolling digits ---------- */
+  .d {
+    position: relative;
+    display: inline-block;
+    height: var(--p);
+    clip-path: inset(0 -0.4em);                /* clips the top and bottom to the window, lets digits overhang the sides */
+  }
+  .d .sz { visibility: hidden; display: block; height: var(--p); }          /* gives the column the width of its final digit */
+  .d .tape {
+    position: absolute; left: 50%; top: 0;
+    display: flex; flex-direction: column; align-items: center;
+    transform: translate3d(-50%, calc(var(--i, 0) * var(--p) * -1), 0);
+    transition-property: transform;
+    transition-timing-function: cubic-bezier(.16, .84, .24, 1);        /* quick start, long soft landing */
+    will-change: transform;
+  }
+  .d .tape b { display: block; height: var(--p); font-weight: inherit; }
+  .s.go .d .tape { --i: var(--end); }
+
+  /* the extras (M, +) and the label arrive once the digits are on their way */
+  .fade { opacity: 0; transform: translate3d(0, 8px, 0); transition: opacity .6s ease var(--fd, .6s), transform .6s cubic-bezier(.2,.7,.2,1) var(--fd, .6s); }
+  .s.go .fade { opacity: 1; transform: none; }
+
+  .rw, .rw * { transition: none !important; }   /* used while resetting a stat so it can roll again */
+
+  /* ---------- Narrow screens: stack them ---------- */
+  @media (max-width: 760px) {
+    .networks { flex-direction: column; padding: 56px 20px 60px; gap: 34px; }
+    .networks { --n: clamp(60px, 18vw, 76px); }
+    h1 { text-align: center; white-space: normal; font-size: clamp(36px, 10.5vw, 46px); }
+    .slot { width: 100%; }
+    .label { white-space: normal; font-size: 15px; max-width: 18em; margin-left: auto; margin-right: auto; text-wrap: balance; }
+    .br { display: none; }
+  }
+
+  /* reduced motion: no rolling, no sliding; the stats just swap */
+  .static .d .tape { display: none; }
+  .static .d .sz { visibility: visible; }
+  .static .fade { opacity: 1; transform: none; transition: none; }
+  .static .s.on, .static .s.off { animation: none !important; }
+  .static .s.off { visibility: hidden; opacity: 0; }
+  @media (prefers-reduced-motion: reduce) {
+    .d .tape, .fade { transition: none !important; }
+  }
+</style>
+</head>
+
+<body>
+<section class="networks" id="networks" aria-label="On the networks">
+
+  <h1>On the <span class="accent">networks</span></h1>
+
+  <div class="slot" id="slot">
+    <div class="s on" data-text="24/7">
+      <div class="num"></div>
+      <p class="label fade" style="--fd:.8s">On every instant payment rail,<br class="br"> including weekends and holidays.</p>
+    </div>
+    <div class="s" data-text="150M+" aria-hidden="true">
+      <div class="num"></div>
+      <p class="label fade" style="--fd:.8s">Enrolled accounts that can receive payouts<br class="br"> by email or U.S. mobile number.</p>
+    </div>
+    <div class="s" data-text="2,400+" aria-hidden="true">
+      <div class="num"></div>
+      <p class="label fade" style="--fd:.8s">Banking and credit union apps offer Zelle.</p>
+    </div>
+    <div class="s" data-text="1,800+" aria-hidden="true">
+      <div class="num"></div>
+      <p class="label fade" style="--fd:.8s">Financial institutions participate in the<br class="br"> FedNow Service.</p>
+    </div>
+  </div>
+
+</section>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============================================================
+     TWEAK THESE
+     ============================================================ */
+  var CONFIG = {
+    interval: 3000,      // ms each stat stays before the next one takes over.
+    duration: 1100,      // ms. How long each digit takes to roll to its number.
+    digitStagger: 90,    // ms between the digits of one number (left to right).
+    spins: 1,            // extra full turns of 0 to 9 before landing (0 = rolls straight there, 2 = spins more).
+    startAt: 0.5         // how much of the section must be on screen before it starts (0 to 1).
+  };
+
+  var root = document.documentElement;
+  var section = document.getElementById("networks");
+  var slides = Array.prototype.slice.call(document.querySelectorAll("#slot .s"));
+  var N = slides.length;
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce) root.classList.add("static");
+
+  /* ---------- build each number: digits roll, M and + fade in, commas and slashes just sit there ---------- */
+  slides.forEach(function (s) {
+    var holder = s.querySelector(".num");
+    var text = s.getAttribute("data-text");
+    var order = 0;
+    text.split("").forEach(function (ch) {
+      if (/[0-9]/.test(ch)) {
+        var n = parseInt(ch, 10);
+        var col = document.createElement("span");
+        col.className = "d";
+        var sz = document.createElement("span"); sz.className = "sz"; sz.textContent = ch; col.appendChild(sz);
+
+        var tape = document.createElement("span"); tape.className = "tape";
+        var turns = CONFIG.spins + 1;
+        for (var t = 0; t <= turns; t++) for (var k = 0; k < 10; k++) { var b = document.createElement("b"); b.textContent = k; tape.appendChild(b); }
+        var end = CONFIG.spins * 10 + n + (n === 0 ? 10 : 0);     // always travels at least one full turn, so even a 0 visibly rolls
+        tape.style.setProperty("--end", end);
+        tape.style.transitionDuration = CONFIG.duration + "ms";
+        tape.style.transitionDelay = (order * CONFIG.digitStagger + 120) + "ms";
+        col.appendChild(tape);
+        holder.appendChild(col);
+        order++;
+      } else {
+        var span = document.createElement("span");
+        span.className = "ch" + (/[M+%]/.test(ch) ? " fade" : "");
+        if (/[M+%]/.test(ch)) span.style.setProperty("--fd", ((order * CONFIG.digitStagger) + CONFIG.duration * 0.55) / 1000 + "s");
+        span.textContent = ch;
+        holder.appendChild(span);
+      }
+    });
+  });
+
+  /* ---------- the clock ---------- */
+  var current = 0, elapsed = 0, last = 0;
+  var onScreen = false, started = false, timers = [];
+
+  function play(s) {                       // start a stat rolling
+    s.classList.remove("rw");
+    window.requestAnimationFrame(function () { s.classList.add("go"); });
+  }
+  function reset(s) {                      // put a stat back to zero without anyone seeing it
+    s.classList.add("rw");
+    s.classList.remove("go");
+    void s.offsetWidth;
+    s.classList.remove("rw");
+  }
+
+  function show(i) {
+    var from = slides[current], to = slides[i];
+    if (from === to) return;
+    from.classList.remove("on");
+    from.classList.add("off");
+    from.setAttribute("aria-hidden", "true");
+    timers.push(setTimeout(function () { from.classList.remove("off"); reset(from); }, 450));
+
+    to.classList.remove("off");
+    reset(to);
+    to.classList.add("on");
+    to.removeAttribute("aria-hidden");
+    // start rolling just as the old one is clearing out
+    timers.push(setTimeout(function () { play(to); }, reduce ? 0 : 220));
+    current = i;
+  }
+
+  function tick(now) {
+    var dt = Math.min(100, now - last);
+    last = now;
+    if (started && onScreen && !document.hidden) {
+      elapsed += dt;
+      if (elapsed >= CONFIG.interval) { elapsed = 0; show((current + 1) % N); }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  /* ---------- start when it is on screen ---------- */
+  function arrive() {
+    started = true;
+    root.classList.add("started");
+    play(slides[0]);
+  }
+  if (!("IntersectionObserver" in window)) { onScreen = true; arrive(); }
+  else {
+    new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        onScreen = e.intersectionRatio > 0;
+        if (!started && e.intersectionRatio >= CONFIG.startAt) arrive();
+      });
+    }, { threshold: [0, CONFIG.startAt] }).observe(section);
+  }
+
+  last = performance.now();
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
