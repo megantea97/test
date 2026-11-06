@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gaming stats</title>
+<meta name="description" content="$166.9B wagered with U.S. commercial sportsbooks in 2025, up 11%. $10.7B in U.S. iGaming revenue in 2025, up 27.6%. 61% of gaming winners are shifting to instant payouts.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --ink: #000;
+    --accent: #AEABFF;          /* the lavender used for $ and % */
+    --line: #AEABFF;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; background: transparent; }
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--sans);
+    color: var(--ink);
+    background: transparent;      /* so it sits on whatever the page behind it is */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ---------- The panel ---------- */
+  .stats {
+    --n: clamp(46px, 6.4vw, 90px);        /* size of the big numbers */
+    position: relative;
+    width: 100%;
+    margin: 0;
+    padding: clamp(26px, 3.4vw, 46px) clamp(14px, 3.2%, 44px) clamp(26px, 3.2vw, 42px);
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    align-items: stretch;
+    opacity: 0;
+    transform: translate3d(0, 24px, 0);
+    transition: opacity 1s cubic-bezier(.2,.7,.2,1), transform 1.2s cubic-bezier(.2,.7,.2,1);
+  }
+  .go .stats, .no-js .stats { opacity: 1; transform: none; }
+
+  .stat { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 clamp(8px, 1.6vw, 28px); }
+  .num {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    font-size: var(--n);
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -0.035em;
+    font-variant-numeric: proportional-nums;
+    white-space: pre;
+  }
+  .label {
+    margin-top: calc(var(--n) * 0.2);
+    max-width: 15.6em;
+    text-wrap: wrap;
+    font-size: clamp(13px, 1.2vw, 17px);
+    line-height: 1.6;
+    letter-spacing: 0;
+    color: var(--ink);
+  }
+  .fn { font-size: .62em; line-height: 0; vertical-align: super; margin-left: .06em; }
+  .src {
+    margin-top: calc(var(--n) * 0.2);
+    max-width: 40em;
+    text-wrap: balance;
+    font-size: clamp(10.5px, .82vw, 12.5px);
+    line-height: 1.5;
+    color: #4a4560;
+  }
+
+  /* the lavender extras: +, / and API */
+  .x { color: var(--accent); font-weight: 300; }
+  .x.it { font-style: italic; font-weight: 400; letter-spacing: -0.04em; }
+  .x.slash { font-weight: 300; }
+  .pc { align-self: flex-start; margin: .3em 0 0 0; font-size: .62em; line-height: 1; font-weight: 300; }
+  .pc.pre { margin-right: .04em; letter-spacing: 0; }
+  .st { display: inline-block; }
+
+  .rule {
+    flex: none;
+    width: 1px;
+    align-self: stretch;
+    margin: calc(var(--n) * 0.1) 0 0;
+    background: var(--line);
+    transform: scaleY(0);
+    transform-origin: 50% 0;
+    transition: transform 1.1s cubic-bezier(.2,.7,.2,1) .35s;
+  }
+  .go .rule, .no-js .rule { transform: scaleY(1); }
+
+  /* ---------- Rolling digits ---------- */
+  .d {
+    position: relative;
+    display: inline-block;
+    height: 1em;
+    clip-path: inset(0 -0.4em);                /* clips top and bottom to the window, lets digits overhang the sides */
+  }
+  .d .sz { visibility: hidden; display: block; height: 1em; }          /* gives the column the width of its final digit */
+  .d .tape {
+    position: absolute; left: 50%; top: 0;
+    display: flex; flex-direction: column; align-items: center;
+    transform: translate3d(-50%, calc(var(--i, 0) * -1em), 0);
+    transition-property: transform;
+    transition-timing-function: cubic-bezier(.16, .84, .24, 1);        /* quick start, long soft landing */
+    will-change: transform;
+  }
+  .d .tape b { display: block; height: 1em; font-weight: inherit; }
+  .go .d .tape { --i: var(--end); }
+
+  /* things that arrive once the numbers are on their way */
+  .fade { opacity: 0; transform: translate3d(0, 10px, 0); transition: opacity .9s ease var(--fd, .6s), transform .9s cubic-bezier(.2,.7,.2,1) var(--fd, .6s); }
+  .go .fade, .no-js .fade { opacity: 1; transform: none; }
+  .no-js .d .tape { display: none; }
+  .no-js .d .sz { visibility: visible; }
+
+  .rw, .rw * { transition: none !important; }
+
+  @media (max-width: 700px) {
+    body { padding: 0 0 24px; }
+    .stats { --n: clamp(60px, 18vw, 76px); padding: 34px 18px 30px; grid-template-columns: 1fr; row-gap: 26px; }
+    .stat { padding: 0 6px; }
+    .label { font-size: 15px; max-width: 17em; text-wrap: balance; }
+    .src { font-size: 12px; margin-top: 12px; }
+    .br { display: none; }
+    .rule { width: min(70%, 260px); height: 1.5px; align-self: center; justify-self: center; margin: 0; transform: scaleX(0); transform-origin: 50% 50%; }
+    .go .rule, .no-js .rule { transform: scaleX(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stats, .rule, .fade, .d .tape { transition: none !important; }
+    .stats { transform: none; }
+  }
+</style>
+</head>
+
+<body>
+<section class="stats" id="stats" aria-label="Gaming payout numbers">
+
+  <div class="stat">
+    <div class="num"><span class="x pc pre fade" style="--fd:.2s">$</span><span data-roll="166.9">166.9</span><span class="st">B</span></div>
+    <div class="label fade" style="--fd:.5s">wagered with U.S. commercial sportsbooks in 2025, up 11%<sup class="fn">1</sup></div>
+  </div>
+
+  <span class="rule" aria-hidden="true"></span>
+
+  <div class="stat">
+    <div class="num"><span class="x pc pre fade" style="--fd:.4s">$</span><span data-roll="10.7">10.7</span><span class="st">B</span></div>
+    <div class="label fade" style="--fd:.7s">in U.S. iGaming revenue in 2025, up 27.6%<sup class="fn">2</sup></div>
+  </div>
+
+  <span class="rule" aria-hidden="true"></span>
+
+  <div class="stat">
+    <div class="num"><span data-roll="61">61</span><span class="x pc fade" style="--fd:1.1s">%</span></div>
+    <div class="label fade" style="--fd:.9s">of gaming winners are shifting to instant payouts<sup class="fn">3</sup></div>
+  </div>
+
+</section>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============================================================
+     TWEAK THESE
+     ============================================================ */
+  var CONFIG = {
+    duration: 1900,      // ms. How long each digit takes to roll to its number.
+    digitStagger: 140,   // ms between the digits of one number (left to right).
+    itemStagger: 220,    // ms between the three numbers.
+    spins: 1,            // extra full turns of 0 to 9 before landing (0 = rolls straight there, 2 = spins more).
+    startAt: 0.45,       // how much of the panel must be on screen before it starts (0 to 1).
+    replay: true         // true = rolls again if it scrolls away and comes back.
+  };
+
+  var root = document.documentElement;
+  var panel = document.getElementById("stats");
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  if (!("IntersectionObserver" in window) || reduce) { root.className += " no-js"; return; }
+
+  /* ---------- turn each number into columns of rolling digits ---------- */
+  var items = Array.prototype.slice.call(panel.querySelectorAll(".stat"));
+  items.forEach(function (stat, si) {
+    var order = 0;
+    Array.prototype.forEach.call(stat.querySelectorAll("[data-roll]"), function (holder) {
+      var text = holder.getAttribute("data-roll");
+      holder.textContent = "";
+      holder.style.display = "inline-flex";
+      text.split("").forEach(function (ch, di) {
+        var n = parseInt(ch, 10);
+        if (isNaN(n)) { var st = document.createElement("span"); st.className = "st"; st.textContent = ch; holder.appendChild(st); return; }
+        var col = document.createElement("span");
+        col.className = "d";
+        var sz = document.createElement("span"); sz.className = "sz"; sz.textContent = ch; col.appendChild(sz);
+
+        var tape = document.createElement("span"); tape.className = "tape";
+        var turns = CONFIG.spins + 1;
+        for (var t = 0; t <= turns; t++) for (var k = 0; k < 10; k++) { var b = document.createElement("b"); b.textContent = k; tape.appendChild(b); }
+        var end = CONFIG.spins * 10 + n + (n === 0 ? 10 : 0);     // always travels at least one full turn, so even a 0 visibly rolls
+        tape.style.setProperty("--end", end);
+        tape.style.transitionDuration = CONFIG.duration + "ms";
+        tape.style.transitionDelay = (si * CONFIG.itemStagger + order * CONFIG.digitStagger + 150) + "ms";
+        col.appendChild(tape);
+        holder.appendChild(col);
+        order++;
+      });
+    });
+  });
+
+  /* ---------- go when it's on screen ---------- */
+  new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.intersectionRatio >= CONFIG.startAt) root.classList.add("go");
+      else if (CONFIG.replay && e.intersectionRatio === 0) {
+        // rewind with no animation so it can roll again next time
+        panel.classList.add("rw");
+        root.classList.remove("go");
+        void panel.offsetWidth;
+        panel.classList.remove("rw");
+      }
+    });
+  }, { threshold: [0, CONFIG.startAt] }).observe(panel);
+
+})();
+</script>
+</body>
+</html>
