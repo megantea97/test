@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iGaming Rolling Numbers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0a0a0a;
+    --accent: #a9a3ee;          /* lavender for $ and % */
+    --rule: #cdc9f6;
+    --roll-ms: 2200ms;
+  }
+
+  html, body { margin: 0; background: #fff; color: var(--ink); }
+  body { font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .spacer { height: 100vh; display: grid; place-items: center; color: #aaa; font-size: 14px; }
+
+  /* ---------- STATS ROW ---------- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 1210px;
+    margin: 0 auto;
+    padding: 72px 24px;
+  }
+  .stat {
+    position: relative;
+    text-align: center;
+    padding: 0 32px;
+  }
+  /* Short vertical divider between columns */
+  .stat + .stat::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    height: 120px;
+    transform: translateY(-50%);
+    border-left: 1px solid var(--rule);
+  }
+
+  .num {
+    font-weight: 300;
+    font-size: clamp(52px, 7vw, 88px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    margin-bottom: 28px;
+  }
+  .num .pre,
+  .num .suf.accent {
+    color: var(--accent);
+    font-size: .72em;
+    vertical-align: .34em;       /* raised, like the original */
+  }
+  .num .pre { margin-right: .02em; }
+  .num .suf.accent { margin-left: .04em; }
+
+  .stat p {
+    margin: 0 auto;
+    max-width: 240px;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #1a1a1a;
+  }
+
+  /* ---------- ROLLING DIGIT ----------
+     Each digit is a clipped window onto a tall strip of numbers.
+     A hidden copy of the final digit sets the column width, so the
+     layout never jumps while the strip rolls. */
+  .digit {
+    position: relative;
+    display: inline-block;
+    line-height: 1;
+    clip-path: inset(0 -1em);    /* clip top and bottom only */
+  }
+  .digit .ghost { visibility: hidden; }
+  .digit .strip {
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    transform: translate3d(0, 0, 0);
+    transition: transform var(--roll-ms) cubic-bezier(.16, 1, .3, 1);
+    transition-delay: var(--delay, 0ms);
+    will-change: transform;
+  }
+  .digit .strip span { display: block; height: 1em; line-height: 1; text-align: center; }
+  .stats.is-in .digit .strip { transform: translate3d(0, calc(var(--steps) * -1em), 0); }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 760px) {
+    .stats { grid-template-columns: 1fr; row-gap: 56px; }
+    .stat { padding: 0 8px; }
+    .stat + .stat::before {
+      top: -28px; left: 50%; height: 0; width: 120px;
+      transform: translateX(-50%);
+      border-left: 0; border-top: 1px solid var(--rule);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .digit .strip { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="spacer">scroll down</div>
+
+<section class="stats" id="stats">
+  <div class="stat">
+    <div class="num" data-to="166.9" data-prefix="$" data-suffix="B" aria-label="$166.9B">$166.9B</div>
+    <p>wagered with U.S. commercial sportsbooks in 2025, up 11%&sup1;</p>
+  </div>
+
+  <div class="stat">
+    <div class="num" data-to="10.7" data-prefix="$" data-suffix="B" aria-label="$10.7B">$10.7B</div>
+    <p>in U.S. iGaming revenue in 2025, up 27.6%&sup2;</p>
+  </div>
+
+  <div class="stat">
+    <div class="num" data-to="61" data-suffix="%" data-suffix-accent aria-label="61%">61%</div>
+    <p>of gaming winners are shifting to instant payouts&sup3;</p>
+  </div>
+</section>
+
+<div class="spacer">more page</div>
+
+<script>
+(() => {
+  const stats = document.getElementById("stats");
+  if (!stats) return;
+
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Tweak these to taste
+  const CFG = {
+    stagger: 110,      // ms between each digit, left to right
+    statStagger: 180,  // extra ms between the three stats
+    baseCycles: 1,     // full 0-9 spins before landing
+    extraCycles: 1     // extra spins for digits further to the right
+  };
+
+  /* Build the rolling digits (text stays in aria-label for screen readers) */
+  stats.querySelectorAll(".num").forEach((el, statIdx) => {
+    const to = el.dataset.to;
+    const prefix = el.dataset.prefix || "";
+    const suffix = el.dataset.suffix || "";
+    el.textContent = "";
+
+    if (prefix) {
+      const s = document.createElement("span");
+      s.className = "pre"; s.textContent = prefix; s.setAttribute("aria-hidden", "true");
+      el.appendChild(s);
+    }
+
+    const chars = [...to];
+    const digitCount = chars.filter(c => /\d/.test(c)).length;
+    let d = 0;
+
+    chars.forEach((ch) => {
+      if (!/\d/.test(ch)) {
+        const dot = document.createElement("span");
+        dot.textContent = ch; dot.setAttribute("aria-hidden", "true");
+        el.appendChild(dot);
+        return;
+      }
+      const n = +ch;
+      const cycles = CFG.baseCycles + Math.round((d / Math.max(digitCount - 1, 1)) * CFG.extraCycles);
+      const steps = cycles * 10 + n;
+
+      const col = document.createElement("span");
+      col.className = "digit";
+      col.setAttribute("aria-hidden", "true");
+      col.style.setProperty("--steps", steps);
+      col.style.setProperty("--delay", (statIdx * CFG.statStagger + d * CFG.stagger) + "ms");
+
+      const ghost = document.createElement("span");
+      ghost.className = "ghost"; ghost.textContent = ch;
+
+      const strip = document.createElement("span");
+      strip.className = "strip";
+      for (let i = 0; i <= steps; i++) {
+        const cell = document.createElement("span");
+        cell.textContent = i % 10;
+        strip.appendChild(cell);
+      }
+
+      col.append(ghost, strip);
+      el.appendChild(col);
+      d++;
+    });
+
+    if (suffix) {
+      const s = document.createElement("span");
+      s.className = "suf" + (el.hasAttribute("data-suffix-accent") ? " accent" : "");
+      s.textContent = suffix; s.setAttribute("aria-hidden", "true");
+      el.appendChild(s);
+    }
+  });
+
+  /* Roll when the row scrolls into view (once) */
+  if (reduce) {
+    stats.querySelectorAll(".strip").forEach(s => s.style.transition = "none");
+    stats.classList.add("is-in");
+    return;
+  }
+  const io = new IntersectionObserver(([entry]) => {
+    if (entry.isIntersecting) {
+      stats.classList.add("is-in");
+      io.disconnect();
+    }
+  }, { threshold: 0.45 });
+  io.observe(stats);
+})();
+</script>
+</body>
+</html>
